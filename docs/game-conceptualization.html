@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bomb Pass Ã¢â‚¬â€ Game Conceptualization</title>
+<style>
+  :root {
+    --navy: #1a2a4a;
+    --navy-light: #2a3a5a;
+    --orange: #e6781e;
+    --orange-light: #f5a623;
+    --bg: #ffffff;
+    --text: #2d2d2d;
+    --muted: #666;
+    --border: #ddd;
+    --pass: #2e7d32;
+    --fail: #c62828;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #f0f0f0;
+    line-height: 1.6;
+  }
+  .page {
+    max-width: 850px;
+    margin: 0 auto;
+    background: var(--bg);
+    padding: 48px 56px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; max-width: none; padding: 24px 32px; }
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    h2 { page-break-after: avoid; }
+    table, tr { page-break-inside: avoid; }
+  }
+
+  /* Cover */
+  .cover { text-align: center; padding: 60px 0 40px; border-bottom: 3px solid var(--orange); margin-bottom: 36px; }
+  .cover .badge { display: inline-block; background: var(--navy); color: #fff; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 16px; border-radius: 20px; margin-bottom: 20px; }
+  .cover h1 { font-size: 52px; color: var(--navy); letter-spacing: -1px; margin-bottom: 8px; }
+  .cover .tagline { font-size: 18px; color: var(--orange); font-weight: 600; margin-bottom: 24px; }
+  .cover .meta { font-size: 14px; color: var(--muted); }
+  .cover .meta span { margin: 0 12px; }
+
+  h2 { font-size: 24px; color: var(--navy); margin: 32px 0 14px; padding-bottom: 6px; border-bottom: 2px solid var(--orange); }
+  h3 { font-size: 17px; color: var(--navy-light); margin: 20px 0 8px; }
+  p { margin-bottom: 12px; }
+  ul, ol { margin: 0 0 12px 24px; }
+  li { margin-bottom: 4px; }
+
+  .pitch-box { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: #fff; padding: 24px 28px; border-radius: 10px; margin: 16px 0; font-size: 18px; font-style: italic; text-align: center; }
+
+  .core-loop { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+  .core-loop .step { background: var(--navy); color: #fff; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 15px; }
+  .core-loop .arrow { color: var(--orange); font-size: 22px; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 14px; }
+  th { background: var(--navy); color: #fff; text-align: left; padding: 9px 12px; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #f8f9fb; }
+
+  .m { color: var(--pass); font-weight: 700; }
+  .s { color: #1565c0; font-weight: 700; }
+  .c { color: #6a1b9a; font-weight: 700; }
+  .w { color: var(--fail); font-weight: 700; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; background: #fafbfc; }
+  .card h3 { margin-top: 0; }
+
+  .callout { background: #fff8e1; border-left: 4px solid var(--orange); padding: 12px 16px; margin: 14px 0; border-radius: 0 6px 6px 0; font-size: 14px; }
+  .callout.info { background: #e3f2fd; border-left-color: #1565c0; }
+
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); text-align: center; }
+
+  .print-btn { position: fixed; bottom: 24px; right: 24px; background: var(--orange); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .print-btn:hover { background: var(--orange-light); }
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">Ã°Å¸â€“Â¨Ã¯Â¸Â Print / Save as PDF</button>
+
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover"><img src="data:image/png;base64,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" alt="Bomb Pass thumbnail" style="width:300px;height:225px;border-radius:8px;margin:16px 0;" />
+    <div class="badge">CS 313 Capstone Ã‚Â· Library Game Hub</div>
+    <h1>Bomb Pass</h1>
+    <div class="tagline">Answer questions and pass the bomb. When time runs out, the holder gets a penalty. Last player standing wins.</div>
+    <div class="meta">
+      <span><strong>Team:</strong> Bomb Pass Team (BSCS 3-2)</span>
+      <span><strong>Version:</strong> 1.0.0</span>
+      <span><strong>Date:</strong> October 2026</span>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <h2>1. Overview</h2>
+  <p><strong>Bomb Pass</strong> is a web-based multiplayer question game for the Library Game Hub. A host (librarian or teacher) logs in, creates a question set, and starts a session. The server generates a 6-digit join code. Players join with just a nickname Ã¢â‚¬â€ no account needed. Players answer multiple-choice questions while passing a virtual bomb to each other. When the bomb timer expires, the holder receives a penalty. At 3 penalties, a player is eliminated. The last active player wins.</p>
+  <p>The server is authoritative for all game state: it validates answers, tracks the bomb holder, manages the timer, and determines penalties. The client only displays state.</p>
+
+  <div class="pitch-box">
+    "Answer questions and pass the bomb. When time runs out, the holder gets a penalty. Last player standing wins."
+  </div>
+
+  <!-- GENRE & PLATFORM -->
+  <h2>2. Genre and Platform</h2>
+  <table>
+    <tr><th style="width:180px">Aspect</th><th>Detail</th></tr>
+    <tr><td><strong>Genre</strong></td><td>Multiplayer Question-Based Action Game</td></tr>
+    <tr><td><strong>Platform</strong></td><td>Web Browser (desktop and mobile)</td></tr>
+    <tr><td><strong>Architecture</strong></td><td>ClientÃ¢â‚¬â€œServer (Layered / MVC), REST API</td></tr>
+    <tr><td><strong>Players per session</strong></td><td>3Ã¢â‚¬â€œ30</td></tr>
+    <tr><td><strong>Session length</strong></td><td>~5Ã¢â‚¬â€œ15 minutes (configurable bomb timer)</td></tr>
+  </table>
+
+  <!-- TARGET PLAYERS -->
+  <h2>3. Target Players</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Primary</h3>
+      <ul>
+        <li>Library visitors</li>
+        <li>High school students</li>
+        <li>College students</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Secondary</h3>
+      <ul>
+        <li>Casual players who enjoy simple multiplayer games</li>
+        <li>Teachers running classroom review sessions</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CORE LOOP -->
+  <h2>4. Core Loop</h2>
+  <p>The game follows a 6-verb core loop:</p>
+  <div class="core-loop">
+    <span class="step">Join</span><span class="arrow">Ã¢â€ â€™</span>
+    <span class="step">Answer</span><span class="arrow">Ã¢â€ â€™</span>
+    <span class="step">Pass</span><span class="arrow">Ã¢â€ â€™</span>
+    <span class="step">Explode</span><span class="arrow">Ã¢â€ â€™</span>
+    <span class="step">Penalize</span><span class="arrow">Ã¢â€ â€™</span>
+    <span class="step">Win</span>
+  </div>
+  <table>
+    <tr><th style="width:140px">Step</th><th>What happens</th></tr>
+    <tr><td><strong>1. Join</strong></td><td>Player enters the 6-digit code and a nickname (2Ã¢â‚¬â€œ20 chars, bad-word filtered). No account required.</td></tr>
+    <tr><td><strong>2. Answer</strong></td><td>Player submits a choice to the active question. The server decides correctness and returns <code>{correct, score, rank}</code>.</td></tr>
+    <tr><td><strong>3. Pass</strong></td><td>The current bomb holder passes the bomb to another active player. The timer resets.</td></tr>
+    <tr><td><strong>4. Explode</strong></td><td>The bomb deadline passes. Expiration is lazy Ã¢â‚¬â€ processed on the next server request (no background timers).</td></tr>
+    <tr><td><strong>5. Penalize</strong></td><td>The holder receives 1 penalty. At 3 penalties, the player is eliminated.</td></tr>
+    <tr><td><strong>6. Win</strong></td><td>The last active player remaining wins the game.</td></tr>
+  </table>
+
+  <!-- MECHANICS -->
+  <h2>5. Mechanics</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Host Mechanics</h3>
+      <ul>
+        <li>Log in with username + password (bcrypt-hashed)</li>
+        <li>Create, list, view, export, import, and copy question sets</li>
+        <li>Start a session (server generates the 6-digit join code)</li>
+        <li>End a running session</li>
+        <li>Review saved results after the game</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Player Mechanics</h3>
+      <ul>
+        <li>Join with code + nickname (no account, no personal data)</li>
+        <li>View the active question and choices</li>
+        <li>Submit one answer per question</li>
+        <li>Pass the bomb to another active player</li>
+        <li>See penalty count and active/eliminated status</li>
+        <li>Leave the game (forfeit)</li>
+        <li>View the final leaderboard</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Controls</h3>
+  <table>
+    <tr><th>Control</th><th>Action</th></tr>
+    <tr><td>Select Answer</td><td>Click/tap an answer choice</td></tr>
+    <tr><td>Pass Bomb</td><td>Select target player and confirm</td></tr>
+    <tr><td>Join Game</td><td>Enter 6-digit code and nickname</td></tr>
+    <tr><td>Leave Game</td><td>Forfeit button (marks you eliminated)</td></tr>
+  </table>
+
+  <!-- WIN/LOSE -->
+  <h2>6. Win / Lose Rules</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Winning</h3>
+      <ul>
+        <li>The game ends when only one active player remains</li>
+        <li>That player is the winner</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Losing</h3>
+      <ul>
+        <li>A player is eliminated after 3 penalties</li>
+        <li>A penalty is received when the bomb timer expires while holding the bomb</li>
+      </ul>
+    </div>
+  </div>
+  <p><strong>Tie-breaking:</strong> Not applicable Ã¢â‚¬â€ the game continues until one player remains.</p>
+
+  <!-- FEATURES -->
+  <h2>7. Features (MoSCoW)</h2>
+  <table>
+    <tr><th>ID</th><th>Feature</th><th>Priority</th></tr>
+    <tr><td>M1</td><td>Host can start a game session</td><td class="m">MUST</td></tr>
+    <tr><td>M2</td><td>Players can join using a 6-digit code</td><td class="m">MUST</td></tr>
+    <tr><td>M3</td><td>Players can join using a nickname</td><td class="m">MUST</td></tr>
+    <tr><td>M4</td><td>Host can select a question set</td><td class="m">MUST</td></tr>
+    <tr><td>M5</td><td>Players can answer questions</td><td class="m">MUST</td></tr>
+    <tr><td>M6</td><td>Players can pass the virtual bomb</td><td class="m">MUST</td></tr>
+    <tr><td>M7</td><td>Countdown timer is supported</td><td class="m">MUST</td></tr>
+    <tr><td>M8</td><td>System determines bomb holder at expiration</td><td class="m">MUST</td></tr>
+    <tr><td>M9</td><td>Penalty / elimination is recorded</td><td class="m">MUST</td></tr>
+    <tr><td>M10</td><td>Leaderboard shows player rankings</td><td class="m">MUST</td></tr>
+    <tr><td>M11</td><td>Host can end a session</td><td class="m">MUST</td></tr>
+    <tr><td>S1</td><td>Display remaining time</td><td class="s">SHOULD</td></tr>
+    <tr><td>S2</td><td>Display current bomb holder</td><td class="s">SHOULD</td></tr>
+    <tr><td>S3</td><td>Display player status</td><td class="s">SHOULD</td></tr>
+    <tr><td>S4</td><td>Show penalty count</td><td class="s">SHOULD</td></tr>
+    <tr><td>S5</td><td>Show game results after the session</td><td class="s">SHOULD</td></tr>
+    <tr><td>S6</td><td>List and view my question sets</td><td class="s">SHOULD</td></tr>
+    <tr><td>S7</td><td>Export / import question set JSON</td><td class="s">SHOULD</td></tr>
+    <tr><td>C1</td><td>Sound effect when bomb is passed</td><td class="c">COULD</td></tr>
+    <tr><td>C2</td><td>Warning sound when timer is nearly finished</td><td class="c">COULD</td></tr>
+    <tr><td>C3</td><td>Different bomb designs</td><td class="c">COULD</td></tr>
+    <tr><td>C4</td><td>Explosion animation</td><td class="c">COULD</td></tr>
+    <tr><td>W1</td><td>Player accounts for joining a game</td><td class="w">WON'T</td></tr>
+    <tr><td>W2</td><td>Real-money rewards</td><td class="w">WON'T</td></tr>
+    <tr><td>W3</td><td>Physical bomb or real-world equipment</td><td class="w">WON'T</td></tr>
+    <tr><td>W4</td><td>Personal data from players (no real name, ID, email, phone, or photo)</td><td class="w">WON'T</td></tr>
+  </table>
+
+  <!-- HUB CONTRACT FIT -->
+  <div class="page-break"></div>
+  <h2>8. Hub Contract Fit</h2>
+  <table>
+    <tr><th style="width:220px">Hub Contract Rule</th><th>Bomb Pass Implementation</th></tr>
+    <tr><td><strong>Rule 1: game-info</strong></td><td>Returns all 9 fields (slug, name, team, description, min/max players, thumbnail_url, play_url, version); validated on startup</td></tr>
+    <tr><td><strong>Rule 2: health</strong></td><td>200 <code>{status:"ok", database:"ok", time}</code> only when a real <code>SELECT 1</code> succeeds; 503 DATABASE_DOWN otherwise</td></tr>
+    <tr><td><strong>Rule 3: question-set format</strong></td><td><code>{title, description, subject, grade_level, questions:[{text, type, choices[], correct_index, time_limit_sec}]}</code>; validated in QuestionFactory; correct_index never sent to players</td></tr>
+    <tr><td><strong>Rule 4: one error format</strong></td><td><code>{error:{code, message}}</code> from a single middleware; all codes in one constants file</td></tr>
+    <tr><td><strong>Rule 5: sessions, codes, privacy</strong></td><td>6-digit codes never starting with 0, unique among open sessions; nickname 2Ã¢â‚¬â€œ20 chars, bad-word filtered; player token 3h, one session; no personal data collected</td></tr>
+    <tr><td><strong>Rule 6: URLs and naming</strong></td><td><code>/api/v1</code> prefix, plural lowercase nouns, hyphens; fixed names auth, question-sets, sessions, players, answers, leaderboard; game-specific bomb-passes, questions</td></tr>
+    <tr><td><strong>Ã‚Â§2 / Ã‚Â§7: deployment</strong></td><td>FINAL: one library server (<code>node server.js</code>, env PORT default 3001) behind the hub forwarding <code>/games/bomb-pass/</code>; PostgreSQL schema <code>bomb_pass</code>. TEST: Vercel serverless + Neon Postgres. Same router mounted at <code>/api/v1</code> and <code>/games/bomb-pass/api/v1</code></td></tr>
+    <tr><td><strong>Stateless design</strong></td><td>No in-memory game state, no timers, no WebSockets; lazy expiration driven by client polling (GET /sessions/{code} every 1Ã¢â‚¬â€œ2 s)</td></tr>
+  </table>
+
+  <!-- ARCHITECTURE -->
+  <h2>9. Architecture</h2>
+  <p><strong>Layered architecture:</strong> Client Ã¢â€ â€™ Routes Ã¢â€ â€™ Controllers Ã¢â€ â€™ Services Ã¢â€ â€™ Repositories Ã¢â€ â€™ Database</p>
+  <table>
+    <tr><th>Layer</th><th>Classes</th><th>Responsibility</th></tr>
+    <tr><td>Routes</td><td>authRoutes, questionSetRoutes, sessionRoutes</td><td>URL mapping only</td></tr>
+    <tr><td>Controllers</td><td>Auth, QuestionSet, Session, Player, Answer, Bomb, Leaderboard, Health</td><td>Read input, call a service, send JSON</td></tr>
+    <tr><td>Services</td><td>Auth, AuthToken, QuestionSet, QuestionFactory, Session, SessionState, QuestionFlow, Player, Answer, Bomb, Leaderboard</td><td>All business rules</td></tr>
+    <tr><td>Repositories</td><td>Auth, QuestionSet, Session, Player, Answer, Penalty, Leaderboard</td><td>ALL SQL, nothing else</td></tr>
+    <tr><td>Middleware</td><td>requireHost, requirePlayer, validateBody, errorHandler</td><td>Auth (JWT role), validation, single error format</td></tr>
+  </table>
+  <p><strong>Design patterns:</strong> Repository (all SQL isolated), Singleton (one module-level pg Pool reused across invocations), Factory (QuestionFactory builds/validates question sets from Rule 3 JSON), MVC (View = JSON response).</p>
+
+  <!-- DEPLOYMENT -->
+  <h2>10. Deployment</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Library Server (FINAL)</h3>
+      <ul>
+        <li><code>node server.js</code> on env PORT (default 3001)</li>
+        <li>Behind the hub forwarding <code>/games/bomb-pass/</code></li>
+        <li>PostgreSQL schema <code>bomb_pass</code> (env DB_SCHEMA, search_path)</li>
+        <li>Secrets only in <code>.env</code>, never in Git</li>
+        <li>CORS only from HUB_ORIGIN (+ localhost in dev)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Vercel + Neon (TEST)</h3>
+      <ul>
+        <li>Serverless function <code>/api/index.js</code></li>
+        <li>Same Express app, exported</li>
+        <li>Stateless: no timers, no in-memory state</li>
+        <li>Module-level pg Pool reused across warm invocations</li>
+        <li><code>vercel.json</code> routes <code>/api/*</code> and <code>/games/bomb-pass/api/*</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DATABASE -->
+  <h2>11. Database</h2>
+  <p>PostgreSQL schema <code>bomb_pass</code> Ã¢â‚¬â€ 10 tables:</p>
+  <table>
+    <tr><th>Table</th><th>Purpose</th></tr>
+    <tr><td><code>hosts</code></td><td>Host accounts (username, bcrypt password_hash)</td></tr>
+    <tr><td><code>login_attempts</code></td><td>DB-based login rate limiting (username, ip_hash)</td></tr>
+    <tr><td><code>question_sets</code></td><td>Question set metadata (title, subject, grade_level)</td></tr>
+    <tr><td><code>questions</code></td><td>Questions (text, type, correct_index, time_limit_sec, points)</td></tr>
+    <tr><td><code>choices</code></td><td>Answer choices (question_id, choice_index, choice_text)</td></tr>
+    <tr><td><code>sessions</code></td><td>Game sessions (join_code, status, bomb_holder_id, bomb_expires_at, current_question_id, question_expires_at, winner_player_id)</td></tr>
+    <tr><td><code>players</code></td><td>Players (nickname, score, penalty_count, status)</td></tr>
+    <tr><td><code>answers</code></td><td>Submitted answers (player_id, question_id, choice_index, is_correct)</td></tr>
+    <tr><td><code>penalties</code></td><td>Penalties (player_id, session_id, reason)</td></tr>
+    <tr><td><code>leaderboards</code></td><td>Final rankings (session_id, rankings JSONB)</td></tr>
+  </table>
+
+  <!-- API -->
+  <h2>12. API Overview</h2>
+  <p>21 endpoints under <code>/api/v1</code> (also mounted at <code>/games/bomb-pass/api/v1</code>). Every error uses one format: <code>{error:{code, message}}</code>.</p>
+  <table>
+    <tr><th>Method</th><th>URL</th><th>Auth</th></tr>
+    <tr><td>GET</td><td><code>/health</code></td><td>None</td></tr>
+    <tr><td>GET</td><td><code>/game-info</code></td><td>None</td></tr>
+    <tr><td>POST</td><td><code>/auth/login</code></td><td>None</td></tr>
+    <tr><td>POST</td><td><code>/question-sets</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/question-sets</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/question-sets/{id}</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/question-sets/{id}/export</code></td><td>Host</td></tr>
+    <tr><td>POST</td><td><code>/question-sets/import</code></td><td>Host</td></tr>
+    <tr><td>POST</td><td><code>/question-sets/{id}/copy</code></td><td>Host</td></tr>
+    <tr><td>POST</td><td><code>/sessions</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/sessions</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/sessions/{code}</code></td><td>None</td></tr>
+    <tr><td>PATCH</td><td><code>/sessions/{code}</code></td><td>Host</td></tr>
+    <tr><td>GET</td><td><code>/sessions/{code}/results</code></td><td>Host</td></tr>
+    <tr><td>POST</td><td><code>/sessions/{code}/players</code></td><td>None</td></tr>
+    <tr><td>GET</td><td><code>/sessions/{code}/players</code></td><td>None</td></tr>
+    <tr><td>DELETE</td><td><code>/sessions/{code}/players/{id}</code></td><td>Player</td></tr>
+    <tr><td>GET</td><td><code>/sessions/{code}/questions/current</code></td><td>Player</td></tr>
+    <tr><td>POST</td><td><code>/sessions/{code}/answers</code></td><td>Player</td></tr>
+    <tr><td>POST</td><td><code>/sessions/{code}/bomb-passes</code></td><td>Player</td></tr>
+    <tr><td>GET</td><td><code>/sessions/{code}/leaderboard</code></td><td>None</td></tr>
+  </table>
+
+  <!-- OPEN DECISIONS -->
+  <h2>13. Open Decisions</h2>
+  <table>
+    <tr><th>Item</th><th>Decision</th></tr>
+    <tr><td>Serverless provider</td><td>Vercel + Neon Postgres (test target)</td></tr>
+    <tr><td>Joining while playing</td><td>Blocked Ã¢â€ â€™ 409 SESSION_ALREADY_STARTED</td></tr>
+    <tr><td>Bomb timer duration</td><td>env BOMB_TIMER_SECONDS, default 30</td></tr>
+    <tr><td>Ranking formula</td><td>Active first, score desc, penalties asc; eliminated after</td></tr>
+    <tr><td>Question advancement</td><td>Active until question_expires_at or all active players answered; wrap around</td></tr>
+    <tr><td>First bomb holder</td><td>Random active player</td></tr>
+    <tr><td>Bad-word list</td><td>Small English + Filipino starter list (config)</td></tr>
+    <tr><td>Host token TTL</td><td>env HOST_TOKEN_TTL, default 8h</td></tr>
+    <tr><td>Player token TTL</td><td>3 hours, one session only</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>Note:</strong> Endpoints <code>/export</code>, <code>/import</code>, and <code>/copy</code> use verbs in the URL, which Hub Contract Rule 6 discourages. They are game-specific sub-resources and are flagged for instructor confirmation.
+  </div>
+
+  <div class="footer">
+    Bomb Pass Ã‚Â· Bomb Pass Team (BSCS 3-2) Ã‚Â· CS 313 Capstone Ã‚Â· Library Game Hub Ã‚Â· Version 1.0.0
+  </div>
+
+</div>
+</body>
+</html>

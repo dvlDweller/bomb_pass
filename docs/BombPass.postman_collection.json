@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "Bomb Pass API (Hub Contract v1)",
+    "description": "All 21 endpoints for the Bomb Pass game API, including error cases. Set the `baseUrl` variable to your server (default http://localhost:3001), `hostToken` after login, and `playerToken` after joining.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "hostToken", "value": "" },
+    { "key": "playerToken", "value": "" },
+    { "key": "code", "value": "" },
+    { "key": "questionSetId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "targetPlayerId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/health"
+      }
+    },
+    {
+      "name": "2. Game Info",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/game-info"
+      }
+    },
+    {
+      "name": "3. Host Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    pm.collectionVariables.set('hostToken', pm.response.json().token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"librarian\",\n  \"password\": \"Librarian123!\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3b. Login - bad credentials (401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"librarian\",\n  \"password\": \"wrong\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3c. Login - missing fields (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"librarian\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Create Question Set",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    pm.collectionVariables.set('questionSetId', pm.response.json().id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/question-sets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Philippine Literature\",\n  \"description\": \"Questions about Philippine literature\",\n  \"subject\": \"Literature\",\n  \"grade_level\": \"Grade 11\",\n  \"questions\": [\n    {\n      \"text\": \"Who wrote Noli Me Tangere?\",\n      \"type\": \"multiple_choice\",\n      \"choices\": [\"Jose Rizal\", \"Andres Bonifacio\", \"Apolinario Mabini\", \"Emilio Aguinaldo\"],\n      \"correct_index\": 0,\n      \"time_limit_sec\": 20\n    },\n    {\n      \"text\": \"The sky is blue.\",\n      \"type\": \"true_false\",\n      \"choices\": [\"True\", \"False\"],\n      \"correct_index\": 0,\n      \"time_limit_sec\": 10\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "4b. Create Question Set - invalid (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/question-sets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"ab\",\n  \"questions\": []\n}"
+        }
+      }
+    },
+    {
+      "name": "5. List Question Sets",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/question-sets"
+      }
+    },
+    {
+      "name": "6. Get Question Set",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/question-sets/{{questionSetId}}"
+      }
+    },
+    {
+      "name": "6b. Get Question Set - not yours (403)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/question-sets/999999"
+      }
+    },
+    {
+      "name": "7. Start Session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    pm.collectionVariables.set('code', pm.response.json().join_code);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_set_id\": {{questionSetId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "7b. Start Session - missing set (404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_set_id\": 999999\n}"
+        }
+      }
+    },
+    {
+      "name": "8. List My Sessions",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/sessions"
+      }
+    },
+    {
+      "name": "9. Get Session",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}"
+      }
+    },
+    {
+      "name": "9b. Get Session - unknown code (404)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/sessions/999999"
+      }
+    },
+    {
+      "name": "10. Start Game (PATCH playing)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"playing\"\n}"
+        }
+      }
+    },
+    {
+      "name": "10b. End Game (PATCH ended)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"ended\"\n}"
+        }
+      }
+    },
+    {
+      "name": "10c. PATCH - not your session (403)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{playerToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"playing\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Join Session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    pm.collectionVariables.set('playerToken', pm.response.json().token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/players",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nickname\": \"PlayerOne\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11b. Join - nickname taken (409)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/players",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nickname\": \"PlayerOne\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11c. Join - bad code format (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/sessions/abc/players",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nickname\": \"X\"\n}"
+        }
+      }
+    },
+    {
+      "name": "12. List Players",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/players"
+      }
+    },
+    {
+      "name": "13. Get Current Question",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    pm.collectionVariables.set('questionId', pm.response.json().question_id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{playerToken}}" }],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/questions/current"
+      }
+    },
+    {
+      "name": "13b. Current Question - no token (401)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/questions/current"
+      }
+    },
+    {
+      "name": "14. Submit Answer",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{playerToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/answers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_id\": {{questionId}},\n  \"choice_index\": 0\n}"
+        }
+      }
+    },
+    {
+      "name": "14b. Answer - already answered (409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{playerToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/answers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_id\": {{questionId}},\n  \"choice_index\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Pass Bomb",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{playerToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/bomb-passes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"target_player_id\": {{targetPlayerId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "15b. Pass Bomb - not holder (403)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{playerToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/bomb-passes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"target_player_id\": {{targetPlayerId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Get Leaderboard",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/leaderboard"
+      }
+    },
+    {
+      "name": "17. Export Question Set",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/question-sets/{{questionSetId}}/export"
+      }
+    },
+    {
+      "name": "18. Import Question Set",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{hostToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/question-sets/import",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Imported Set\",\n  \"questions\": [\n    {\n      \"text\": \"Is the sky blue?\",\n      \"type\": \"true_false\",\n      \"choices\": [\"True\", \"False\"],\n      \"correct_index\": 0,\n      \"time_limit_sec\": 10\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Copy Question Set",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/question-sets/{{questionSetId}}/copy"
+      }
+    },
+    {
+      "name": "20. Get Session Results",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{hostToken}}" }],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/results"
+      }
+    },
+    {
+      "name": "21. Leave Game (Forfeit)",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{playerToken}}" }],
+        "url": "{{baseUrl}}/api/v1/sessions/{{code}}/players/{{targetPlayerId}}"
+      }
+    }
+  ]
+}
